@@ -11,13 +11,13 @@ def markets_view(request):
     
     if request.method == 'GET':
         markets = Market.objects.all()
-        serializer = MarketSerializer(markets, many=True)
+        serializer = MarketSerializer(markets, many=True) # "many=True" serializer muss informiert werden, dass es eine Liste von Market bekommt und nicht nur ein object
         return Response(serializer.data)  
      
     if request.method == 'POST':
         serializer = MarketSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save() # hier wird create Methode von serializer aufgerufen
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors) #  return Response({"error": "Market not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -44,8 +44,9 @@ def market_single_view(request, pk):
     if request.method == 'DELETE':
         market = Market.objects.get(pk=pk)
         serializer = MarketSerializer(market)
-        market.delete()
-        return Response(serializer.data)   
+        market.delete()   # serializer kann ncht löschen nur umwandeln
+        return Response(serializer.data) 
+        # return Response({"message": "Market deleted successfully"}, status=204)  
             
         
         
