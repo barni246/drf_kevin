@@ -54,9 +54,11 @@ class SellerCreateSerializer(serializers.Serializer):
     markets = serializers.ListField(child=serializers.IntegerField(),write_only=True) # "child" ist hier für Datentyp gedacht, es wurde integer datentyp festgelegt für  "Unterfeld"
     
     def validate_markets(self, value):
-        markets = Market.objects.filter(id__in=value)
-        if(markets) != len(value):
-            raise serializers.ValidationError("One or more Markets not found")
+        markets = Market.objects.filter(id__in=value) # id in value wird gesucht
+        if len(markets) != len(value):
+            serializer = MarketSerializer(markets, many=True)
+            raise serializers.ValidationError({"message": len(value)})
+            # raise serializers.ValidationError(serializer)
         return value
     
     def create(self, validated_data): 
