@@ -97,7 +97,7 @@ def product_single_view(request, pk):
         serializer = ProductDetailSerializer(product, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors)
        
