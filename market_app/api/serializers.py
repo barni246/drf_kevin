@@ -77,9 +77,40 @@ class ProductDetailSerializer(serializers.Serializer):
     description = serializers.CharField()
     price = serializers.DecimalField(max_digits=50, decimal_places=2)
     name = serializers.CharField()
-    markets = MarketSerializer(many=True,read_only=True) 
-    sellers = SellerDetailSerializer(many=True,read_only=True) 
-    
+
+    # Marktplätze & Verkäufer anzeigen
+    markets = MarketSerializer(many=True, read_only=True)  
+    sellers = SellerDetailSerializer(many=True, read_only=True)
+
+    # Märkten & Verkäufern übergeben
+    market_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True)
+    seller_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True)
+
+    def validate_market_ids(self, value):
+        markets = Market.objects.filter(id__in=value)
+        if len(markets) != len(value):
+            raise serializers.ValidationError("Ein oder mehrere Market-IDs existieren nicht.")
+        return value
+
+    def validate_seller_ids(self, value):
+        sellers = Seller.objects.filter(id__in=value)
+        if len(sellers) != len(value):
+            raise serializers.ValidationError("Ein oder mehrere Seller-IDs existieren nicht.")
+        return value
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.price = validated_data.get('price', instance.price)
+        instance.description = validated_data.get('description', instance.description)
+
+        if 'market_ids' in validated_data:
+            instance.markets.set(Market.objects.filter(id__in=validated_data['market_ids']))  
+        if 'seller_ids' in validated_data:
+            instance.sellers.set(Seller.objects.filter(id__in=validated_data['seller_ids']))  
+
+        instance.save()
+        return instance
+
     
 class ProductCreateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=255)
