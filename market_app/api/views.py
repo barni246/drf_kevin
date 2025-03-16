@@ -66,6 +66,33 @@ def sellers_view(request):
         else:
             return Response(serializer.errors) 
         
+        
+@api_view(['GET', 'DELETE', 'PUT'])        
+def seller_single_view(request, pk):
+    
+    if request.method == 'GET':
+        seller = Seller.objects.get(pk=pk)
+        serializer = SellerDetailSerializer(seller)
+        return Response(serializer.data)   
+    
+    if request.method == 'PUT':
+        seller = Seller.objects.get(pk=pk)
+        serializer = SellerDetailSerializer(seller, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors)
+       
+    if request.method == 'DELETE':
+        seller = Seller.objects.get(pk=pk)
+        serializer = SellerDetailSerializer(seller)
+        seller.delete() 
+        #return Response(serializer.data) 
+        return Response({"message": "Product deleted successfully"}, status=status.HTTP_205_RESET_CONTENT)  
+            
+
+        
 
 @api_view(['GET', 'POST'])
 def products_view(request):
