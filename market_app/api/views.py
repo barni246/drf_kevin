@@ -12,7 +12,7 @@ def markets_view(request):
     if request.method == 'GET':
         markets = Market.objects.all()
         serializer = MarketSerializer(markets, many=True) # "many=True" serializer muss informiert werden, dass es eine Liste von Market bekommt und nicht nur ein object
-        return Response(serializer.data)  
+        return Response(serializer.data, status=status.HTTP_207_MULTI_STATUS)  
      
     if request.method == 'POST':
         serializer = MarketSerializer(data=request.data)
