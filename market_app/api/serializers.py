@@ -59,35 +59,57 @@ class MarketSerializer(serializers.ModelSerializer):
     #     if 'X'in value:
     #         raise serializers.ValidationError('no X in location')
     #     return value
+
+
+ # ab jetzt "markets" ist auf "market_ids" umgeschrieben geworden, Frontend muss ID von Market als "markets_ids" schicken
+ # also Frontend geschickte POST/PUT request muss "market_ids" haben 
+class SellerSerializer(serializers.ModelSerializer):
+    markets = MarketSerializer(many=True, read_only=True)
+    market_ids = serializers.PrimaryKeyRelatedField(  
+        queryset=Market.objects.all(),
+        many=True,
+        source='markets'
+    )
     
+    market_count = serializers.SerializerMethodField()
     
-class SellerDetailSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    name = serializers.CharField(max_length=255)
-    contact_info = serializers.CharField()
-    markets = MarketSerializer(many=True, validators=[validate_markets])
-    # markets = serializers.StringRelatedField(many=True) # Related String Methode, wird nur in Model angegebene Feld angezeigt.
+    class Meta:
+        model = Seller
+        fields = '__all__'
+        
+    def get_market_count(self, obj):
+        return obj.markets.count()
+
     
-    def update(self, instance, validated_data):
-        instance.name = validated_data.get('name', instance.name)
-        instance.contact_info = validated_data.get('contact_info', instance.contact_info)
-        if 'markets' in validated_data:
-            instance.markets.set(Market.objects.filter(id__in=validated_data['markets']))  
-        instance.save()
-        return instance
+# Beide Seller Serializer wurde von ModelSerializer "SellerSerializer" erzätzt!!!!!!!!!!!!!!!!!
+   
+# class SellerDetailSerializer(serializers.Serializer):  
+#     id = serializers.IntegerField(read_only=True)
+#     name = serializers.CharField(max_length=255)
+#     contact_info = serializers.CharField()
+#     markets = MarketSerializer(many=True, validators=[validate_markets])
+#     # markets = serializers.StringRelatedField(many=True) # Related String Methode, wird nur in Model angegebene Feld angezeigt.
+    
+#     def update(self, instance, validated_data):
+#         instance.name = validated_data.get('name', instance.name)
+#         instance.contact_info = validated_data.get('contact_info', instance.contact_info)
+#         if 'markets' in validated_data:
+#             instance.markets.set(Market.objects.filter(id__in=validated_data['markets']))  
+#         instance.save()
+#         return instance
     
            
-class SellerCreateSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=255)
-    contact_info = serializers.CharField()
-    markets = serializers.ListField(child=serializers.IntegerField(), write_only=True, validators=[validate_markets]) # "child" ist hier für Datentyp gedacht, es wurde integer datentyp festgelegt für  "Unterfeld"
+# class SellerCreateSerializer(serializers.Serializer):
+#     name = serializers.CharField(max_length=255)
+#     contact_info = serializers.CharField()
+#     markets = serializers.ListField(child=serializers.IntegerField(), write_only=True, validators=[validate_markets]) # "child" ist hier für Datentyp gedacht, es wurde integer datentyp festgelegt für  "Unterfeld"
 
-    def create(self, validated_data): 
-        market_ids = validated_data.pop('markets')  # Holt die Markt-IDs und entfernt sie aus den Daten
-        seller = Seller.objects.create(**validated_data)  # Erstellt den Seller ohne Märkte
-        markets = Market.objects.filter(id__in=market_ids)  # Holt die Market-Objekte aus der Datenbank
-        seller.markets.set(markets)  # Verknüpft den Seller mit den Märkten  # "seller.markets" kommt von model Seller
-        return seller
+#     def create(self, validated_data): 
+#         market_ids = validated_data.pop('markets')  # Holt die Markt-IDs und entfernt sie aus den Daten
+#         seller = Seller.objects.create(**validated_data)  # Erstellt den Seller ohne Märkte
+#         markets = Market.objects.filter(id__in=market_ids)  # Holt die Market-Objekte aus der Datenbank
+#         seller.markets.set(markets)  # Verknüpft den Seller mit den Märkten  # "seller.markets" kommt von model Seller
+#         return seller
 
     
 class ProductDetailSerializer(serializers.Serializer):
@@ -101,7 +123,7 @@ class ProductDetailSerializer(serializers.Serializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['markets'] = MarketSerializer(instance.markets.all(), many=True).data
-        data['sellers'] = SellerDetailSerializer(instance.sellers.all(), many=True).data
+        data['sellers'] = SellerSerializer(instance.sellers.all(), many=True).data
         return data
 
     def update(self, instance, validated_data):
@@ -124,7 +146,7 @@ class ProductCreateSerializer(serializers.Serializer):
     markets = serializers.ListField(child=serializers.IntegerField(), write_only=True, validators=[validate_markets])
     sellers = serializers.ListField(child=serializers.IntegerField(), write_only=True, validators=[validate_sellers])
     markets_data = MarketSerializer(many=True, read_only=True)
-    sellers_data = SellerDetailSerializer(many=True, read_only=True)
+    sellers_data = SellerSerializer(many=True, read_only=True)
 
     def validate(self, data):
         if not data.get('markets'):
@@ -146,5 +168,5 @@ class ProductCreateSerializer(serializers.Serializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['markets'] = MarketSerializer(instance.markets.all(), many=True).data
-        data['sellers'] = SellerDetailSerializer(instance.sellers.all(), many=True).data
+        data['sellers'] = SellerSerializer(instance.sellers.all(), many=True).data
         return data

@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import MarketSerializer, SellerDetailSerializer, SellerCreateSerializer, ProductDetailSerializer, ProductCreateSerializer
+from .serializers import MarketSerializer, ProductDetailSerializer, ProductCreateSerializer, SellerSerializer # SellerDetailSerializer, SellerCreateSerializer
 from market_app.models import Market, Seller, Product
 
 
@@ -55,11 +55,13 @@ def sellers_view(request):
     
     if request.method == 'GET':
         sellers = Seller.objects.all()
-        serializer = SellerDetailSerializer(sellers, many=True)
+        #serializer = SellerDetailSerializer(sellers, many=True)
+        serializer = SellerSerializer(sellers, many=True)
         return Response(serializer.data)  
      
     if request.method == 'POST':
-        serializer = SellerCreateSerializer(data=request.data)
+        #serializer = SellerCreateSerializer(data=request.data)
+        serializer = SellerSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save() 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -72,12 +74,14 @@ def seller_single_view(request, pk):
     
     if request.method == 'GET':
         seller = Seller.objects.get(pk=pk)
-        serializer = SellerDetailSerializer(seller)
+        #serializer = SellerDetailSerializer(seller)
+        serializer = SellerSerializer(seller)
         return Response(serializer.data)   
     
     if request.method == 'PUT':
         seller = Seller.objects.get(pk=pk)
-        serializer = SellerDetailSerializer(seller, data=request.data, partial=True)
+        #serializer = SellerDetailSerializer(seller, data=request.data, partial=True)
+        serializer = SellerSerializer(seller, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -86,7 +90,8 @@ def seller_single_view(request, pk):
        
     if request.method == 'DELETE':
         seller = Seller.objects.get(pk=pk)
-        serializer = SellerDetailSerializer(seller)
+        #serializer = SellerDetailSerializer(seller)
+        serializer = SellerSerializer(seller)
         seller.delete() 
         #return Response(serializer.data) 
         return Response({"message": "Product deleted successfully"}, status=status.HTTP_205_RESET_CONTENT)  
